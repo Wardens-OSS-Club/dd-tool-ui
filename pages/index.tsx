@@ -5,6 +5,7 @@ import styles from '@/styles/Home.module.css'
 import {runSequence} from 'dd-tool-package'
 import {MOCK_STEPS} from 'dd-tool-package/mock'
 import { useEffect } from 'react'
+import PocCanvas from '../components/PocCanvas'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -71,6 +72,12 @@ export default function Home() {
             height={37}
             priority
           />
+        </div>
+
+        <div>
+          <h1 className={styles.center}>Build Your POC</h1>
+          <br></br>
+            <PocCanvas />
         </div>
 
         <div className={styles.grid}>
