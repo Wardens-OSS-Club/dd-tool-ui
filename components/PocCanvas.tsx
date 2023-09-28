@@ -12,10 +12,10 @@ interface Item {
 
 /** 
  * TO DO:
- * 1) Fix the dragging and reordering -> can't perfectly order atm
+ * 1) DONE: Fix the dragging and reordering -> can't perfectly order atm
  * 2) Rework to receive json from dd-tool (context or props from a level above)
  * 3) Fix quirk of "VM Options" button, it's being overlaid by something
- * 4) much more 
+ * 4) ?
  */
 
 // Useful later to extract the functions from the json provided by the dd-tool
@@ -89,18 +89,17 @@ const PocCanvas: React.FC = () => {
   
     const handleDrop = (e: React.DragEvent<HTMLDivElement>, index: number) => {
       e.preventDefault();
+
       if (!draggedItem) return;
-  
-      const allAvailableItems = [...MOCK_CONTRACT, ...customItems];
-      const itemToAdd = allAvailableItems.find(item => item.id === draggedItem);
-  
-      if (!itemToAdd) return;
-  
-      const newItem = { ...itemToAdd, id: Date.now().toString() };
-      const newItemsList = [...items];
-      newItemsList.splice(index, 0, newItem);
-      setItems(newItemsList);
-  
+
+      const draggedItemIndex = items.findIndex(item => item.id === draggedItem);
+      if (draggedItemIndex === -1) return;
+
+      const updatedItems = [...items];
+      const [removed] = updatedItems.splice(draggedItemIndex, 1);
+      updatedItems.splice(index, 0, removed);
+
+      setItems(updatedItems);
       setDraggedItem(null);
   };
   
@@ -108,6 +107,23 @@ const PocCanvas: React.FC = () => {
       e.preventDefault();
     };
   
+    const handleCanvasDrop = (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      
+      if (!draggedItem) return;
+  
+      const allAvailableItems = [...MOCK_CONTRACT, ...customItems];
+      const itemToAdd = allAvailableItems.find(item => item.id === draggedItem);
+  
+      if (!itemToAdd) return;
+  
+      // Since it's dropped on the canvas directly, simply add the item to the end of the items array
+      const newItem = { ...itemToAdd, id: Date.now().toString() };
+      setItems([...items, newItem]);
+  
+      setDraggedItem(null);
+    };
+
     return (
       <div style={{ fontFamily: 'Roboto, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '20px' }}>
         <div style={{ display: 'flex', gap: '20px' }}>
@@ -133,16 +149,46 @@ const PocCanvas: React.FC = () => {
         )}
   
         <h4>Drag and Build</h4>
-        <div style={{ width: '80%', border: '2px dashed #888', minHeight: '300px', padding: '10px', borderRadius: '10px', position: 'relative' }}>
-          {items.map((item, index) => (
+        <div 
+            onDrop={handleCanvasDrop}
+            onDragOver={(e) => e.preventDefault()}
+            style={{ 
+                minHeight: '100px', 
+                width: '300px', 
+                padding: '20px', 
+                border: '2px dashed #cccccc',
+                position: 'relative' 
+            }}
+        >          
+        {items.map((item, index) => (
             <div
-              key={item.id}
-              onDrop={(e) => handleDrop(e, index)}
-              onDragOver={handleDragOver}
-            >
+            key={item.id} 
+            draggable 
+            onDragStart={(e) => handleDragStart(e, item.id)}
+            onDrop={(e) => handleDrop(e, index)} 
+            onDragOver={handleDragOver}
+            style={{
+                margin: '8px 0',
+                padding: '8px',
+                border: '1px solid #ccc',
+                cursor: 'move'
+            }}
+        >
               <DraggableAction id={item.id} content={item.content} onDragStart={handleDragStart} onDragEnd={handleDragEnd} />
             </div>
           ))}
+          <div 
+                style={{ 
+                    height: '100%', 
+                    width: '100%', 
+                    position: 'absolute', 
+                    top: 0, 
+                    left: 0, 
+                    zIndex: items.length === 0 ? 1 : -1 
+                }} 
+                onDrop={handleCanvasDrop} 
+                onDragOver={(e) => e.preventDefault()}
+            />
         </div>
         {/* Output items array */}
         <h4>Output</h4>
