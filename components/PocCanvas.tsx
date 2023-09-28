@@ -1,4 +1,4 @@
-// components/Canvas.tsx
+// components/PocCanvas.tsx
 import React, { useState } from 'react';
 import DraggableAction from './DraggableAction';
 
@@ -14,8 +14,8 @@ interface Item {
  * TO DO:
  * 1) DONE: Fix the dragging and reordering -> can't perfectly order atm
  * 2) Rework to receive json from dd-tool (context or props from a level above)
- * 3) Fix quirk of "VM Options" button, it's being overlaid by something
- * 4) ?
+ * 3) DONE: Fix quirk of "VM Options" button, it's being overlaid by something
+ * 4) Prob need to get some user flow done too for proper UX
  */
 
 // Useful later to extract the functions from the json provided by the dd-tool
@@ -32,7 +32,7 @@ function extractFunctionName(str: string): string | null {
 
 const PocCanvas: React.FC = () => {
     // We start with this one function as an example
-    // Note: `items` is the array of instructions
+    // Note: `items` is the array of instructions being constructed
     const [items, setItems] = useState<Item[]>([
         {
             id: "0",
@@ -54,6 +54,7 @@ const PocCanvas: React.FC = () => {
     // Setting up the external functions
     // This will usually be given by the json the dd-tool provides
     // TODO rework to get this from props or ? context
+    // This can be passed in from the dd-tool, but want to show more options for now
     const MOCK_CONTRACT = [
         {
             id: "0",
@@ -70,9 +71,8 @@ const PocCanvas: React.FC = () => {
             inputs: []
         }
       ]
-  
-    const [showAddItem, setShowAddItem] = useState(false);
-    const [showDefaultItems, setShowDefaultItems] = useState(false);  // New state for default items visibility
+
+    // Handlers for the draggable elements
     const [draggedItem, setDraggedItem] = useState<string | null>(null);
   
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: string) => {
@@ -117,49 +117,51 @@ const PocCanvas: React.FC = () => {
   
       if (!itemToAdd) return;
   
-      // Since it's dropped on the canvas directly, simply add the item to the end of the items array
       const newItem = { ...itemToAdd, id: Date.now().toString() };
+  
       setItems([...items, newItem]);
   
       setDraggedItem(null);
     };
 
     return (
-      <div style={{ fontFamily: 'Roboto, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '20px' }}>
-        <div style={{ display: 'flex', gap: '20px' }}>
-          <button style={buttonStyle} onClick={() => setShowAddItem(!showAddItem)}>VM Options</button>
-          <button style={buttonStyle} onClick={() => setShowDefaultItems(!showDefaultItems)}>Contract Functions</button>
-        </div>
-        {/* Custom Items and Default Items styling */}
-        {showAddItem && (
-          <div style={{ ...boxStyle, backgroundColor: '#f2f2f2' }}>
-            <h4>VM Options</h4>
-            {customItems.map((item) => (
-              <DraggableAction key={item.id} id={item.id} content={item.content} onDragStart={handleDragStart} />
-            ))}
+      <div style={{ fontFamily: 'Arial, sans-serif', display: 'flex', height: '100vh' }}>
+      <div style={{ width: '40%', borderRight: '1px solid #ccc', padding: '20px', boxSizing: 'border-box' }}>
+          
+          <div style={{ marginBottom: '30px' }}>
+              <h2>VM Options</h2>
+              <div style={{ border: '1px solid #ccc', borderRadius: '5px', padding: '10px' }}>
+                  {customItems.map((item) => (
+                      <DraggableAction key={item.id} id={item.id} content={item.content} onDragStart={handleDragStart} />
+                  ))}
+              </div>
           </div>
-        )}
-        {showDefaultItems && (
-            <div style={{ ...boxStyle, backgroundColor: '#e0e0e0' }}>
-                <h4>Public Fxs</h4>
-                {MOCK_CONTRACT.map((item) => (
-                    <DraggableAction key={item.id} id={item.id} content={item.content} onDragStart={handleDragStart} />
-                ))}
-            </div>
-        )}
-  
-        <h4>Drag and Build</h4>
-        <div 
-            onDrop={handleCanvasDrop}
-            onDragOver={(e) => e.preventDefault()}
-            style={{ 
-                minHeight: '100px', 
-                width: '300px', 
-                padding: '20px', 
-                border: '2px dashed #cccccc',
-                position: 'relative' 
-            }}
-        >          
+          
+          <div>
+              <h2>Contract Functions</h2>
+              <div style={{ border: '1px solid #ccc', borderRadius: '5px', padding: '10px' }}>
+                  {MOCK_CONTRACT.map((item) => (
+                      <DraggableAction key={item.id} id={item.id} content={item.content} onDragStart={handleDragStart} />
+                  ))}
+              </div>
+          </div>
+      </div>
+
+      <div style={{ flex: 1, padding: '20px', overflow: 'auto' }}>
+          <h4>Drag and Drop</h4>
+          <br/>
+          <div 
+              onDrop={handleCanvasDrop}
+              onDragOver={(e) => e.preventDefault()}
+              style={{ 
+                  minHeight: '100px', 
+                  border: '2px dashed #cccccc',
+                  borderRadius: '5px',
+                  padding: '20px',
+                  backgroundColor: '#f9f9f9',
+                  position: 'relative'
+              }}
+          >
         {items.map((item, index) => (
             <div
             key={item.id} 
@@ -190,8 +192,10 @@ const PocCanvas: React.FC = () => {
                 onDragOver={(e) => e.preventDefault()}
             />
         </div>
-        {/* Output items array */}
+        {/* Temp output items array */}
+        <br></br>
         <h4>Output</h4>
+        <br></br>
         <pre>
             {JSON.stringify(
                 items.map(({ functionString, address, inputs }) => ({
@@ -204,28 +208,8 @@ const PocCanvas: React.FC = () => {
             )}
         </pre>
       </div>
+    </div>
     );
-  };
-  
-  const buttonStyle = {
-    padding: '10px 15px',
-    border: 'none',
-    borderRadius: '5px',
-    backgroundColor: '#333',
-    color: '#fff',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s ease',
-    fontWeight: 500,
-    fontSize: '16px',
-    outline: 'none'
-  };
-  
-  const boxStyle = {
-    width: '80%',
-    padding: '16px',
-    margin: '20px 0',
-    borderRadius: '10px',
-    boxShadow: '0 0 10px rgba(0,0,0,0.1)'
   };
 
 export default PocCanvas;
