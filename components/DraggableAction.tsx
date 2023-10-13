@@ -13,10 +13,6 @@ const DraggableAction: React.FC<DraggableActionProps> = ({ id, content, inputs, 
 
   const [inputValues, setInputValues] = useState<string[]>(Array(inputs.length).fill(''));
 
-  useEffect(() => {
-    onUpdateInputVariables?.(inputValues);
-  }, [inputValues, onUpdateInputVariables]);
-
   const handleInputChange = (index: number, value: string) => {
     const updatedInputValues = [...inputValues];
     updatedInputValues[index] = value;
@@ -66,6 +62,7 @@ const DraggableAction: React.FC<DraggableActionProps> = ({ id, content, inputs, 
             type="text" 
             value={inputValues[index] || ''} 
             onChange={(e) => handleInputChange(index, e.target.value)}
+            onBlur={() => onUpdateInputVariables?.(inputValues)}
             style={{ flex: 2, padding: '4px', borderRadius: '4px', border: '1px solid #ccc' }}  // Improved input field styling
           />
         </div>

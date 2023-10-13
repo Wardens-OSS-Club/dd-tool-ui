@@ -9,7 +9,7 @@ import PocCanvas from '../components/PocCanvas'
 
 const inter = Inter({ subsets: ['latin'] })
 
-const RPC_URL = "https://mainnet.infura.io/v3/c7663ea6ddf54fdbaa673941846b176c";
+const RPC_URL = "https://mainnet.infura.io/v3/5b6375646612417cb32cc467e0ef8724";
 
 
 // TODO: Setup Ganache HERE and not via the package
