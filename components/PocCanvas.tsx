@@ -1,5 +1,5 @@
 // components/PocCanvas.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DraggableAction from './DraggableAction';
 
 interface Item {
@@ -7,7 +7,20 @@ interface Item {
   content: string;
   functionString: string;
   address: string;
-  inputs: any[]
+  inputs: Input[];
+  inputVariables?: VariableInput[];
+  onRemove?: () => void; 
+}
+
+interface VariableInput {
+  name: string;
+  type: string;
+  variableInput: string;
+}
+
+interface Input {
+  name: string;
+  type: string;
 }
 
 /** 
@@ -39,15 +52,16 @@ const PocCanvas: React.FC = () => {
             content: "getPricePerFullShare()",
             functionString: "function getPricePerFullShare() external view returns (uint256)",
             address: "0xBA485b556399123261a5F9c95d413B4f93107407",
-            inputs: []
+            inputs: [],
+            inputVariables: []
         }
     ]);
   
     // These are the VM custom instruction set
     // ? Do we hard code this, pull it from the dd tool?
     const customItems = [
-      { id: 'custom-1', content: 'Prank', functionString: "INSERT the PRANK", inputs: [] },
-      { id: 'custom-2', content: 'Deal', functionString: "INSERT the DEAL", inputs: [] },
+      { id: 'custom-1', content: 'Prank', functionString: "INSERT the PRANK", inputs: [{name: "Address", type:"address"}], inputVariables:[] },
+      { id: 'custom-2', content: 'Deal', functionString: "INSERT the DEAL", inputs: [{name: "Target", type:"address"}, {name:"Amount", type:"uint256"}] },
       { id: 'custom-3', content: 'ExpectRevert', functionString: "INSERT the EXEPECTRERVERT", inputs: [] },
     ];
 
@@ -109,7 +123,7 @@ const PocCanvas: React.FC = () => {
   
     const handleCanvasDrop = (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault();
-      
+  
       if (!draggedItem) return;
   
       const allAvailableItems = [...MOCK_CONTRACT, ...customItems];
@@ -117,12 +131,58 @@ const PocCanvas: React.FC = () => {
   
       if (!itemToAdd) return;
   
-      const newItem = { ...itemToAdd, id: Date.now().toString() };
+      const inputVariables: VariableInput[] = itemToAdd.inputs.map(input => ({
+          name: input.name,
+          type: input.type,
+          variableInput: ''  // Ensuring that variableInput is being set properly
+      }));
   
-      setItems([...items, newItem]);
+      const newItem: Item = {
+          ...itemToAdd,
+          id: Date.now().toString(),
+          inputVariables  // Add the initialized inputVariables to the new item
+      };
   
+      setItems(prev => [...prev, newItem]);
       setDraggedItem(null);
+  };
+
+    useEffect(() => {
+      console.log('Items state updated:', items);
+  }, [items]);
+
+  const handleUpdateInputVariables = (itemId: string, inputValues: string[]) => {
+    console.log('handleUpdateInputVariables inputValues:', inputValues);  // Log for debugging
+    setItems(prevItems => {
+        const updatedItems = [...prevItems];
+        const item = updatedItems.find(item => item.id === itemId);
+        if (!item) return prevItems;
+
+        if (!item.inputVariables || item.inputVariables.length === 0) {
+            item.inputVariables = inputValues.map((value, index) => ({
+                name: item.inputs[index].name,
+                type: item.inputs[index].type,
+                variableInput: value
+            }));
+        } else {
+            inputValues.forEach((value, index) => {
+                if (value === undefined) {
+                    console.error('Value is undefined at index:', index);
+                    return;
+                }
+                if (item.inputVariables[index]) {
+                    item.inputVariables[index].variableInput = value;
+                }
+            });
+        }
+        return updatedItems;
+    });
+};
+
+    const handleRemoveItem = (itemId: string) => {
+      setItems(prevItems => prevItems.filter(item => item.id !== itemId));
     };
+
 
     return (
       <div style={{ fontFamily: 'Arial, sans-serif', display: 'flex', height: '100vh' }}>
@@ -132,7 +192,7 @@ const PocCanvas: React.FC = () => {
               <h2>VM Options</h2>
               <div style={{ border: '1px solid #ccc', borderRadius: '5px', padding: '10px' }}>
                   {customItems.map((item) => (
-                      <DraggableAction key={item.id} id={item.id} content={item.content} onDragStart={handleDragStart} />
+                      <DraggableAction key={item.id} id={item.id} content={item.content} inputs={item.inputs || []} onUpdateInputVariables={(inputValues) => handleUpdateInputVariables(item.id, inputValues)} onDragStart={handleDragStart} />
                   ))}
               </div>
           </div>
@@ -141,7 +201,7 @@ const PocCanvas: React.FC = () => {
               <h2>Contract Functions</h2>
               <div style={{ border: '1px solid #ccc', borderRadius: '5px', padding: '10px' }}>
                   {MOCK_CONTRACT.map((item) => (
-                      <DraggableAction key={item.id} id={item.id} content={item.content} onDragStart={handleDragStart} />
+                      <DraggableAction key={item.id} id={item.id} content={item.content} inputs={item.inputs || []} onUpdateInputVariables={(inputValues) => handleUpdateInputVariables(item.id, inputValues)} onDragStart={handleDragStart} />
                   ))}
               </div>
           </div>
@@ -176,7 +236,14 @@ const PocCanvas: React.FC = () => {
                 cursor: 'move'
             }}
         >
-              <DraggableAction id={item.id} content={item.content} onDragStart={handleDragStart} onDragEnd={handleDragEnd} />
+          <DraggableAction 
+            id={item.id} 
+            content={item.content} 
+            inputs={item.inputs || []} 
+            onUpdateInputVariables={(inputValues) => handleUpdateInputVariables(item.id, inputValues)} 
+            onDragStart={handleDragStart}
+            onRemove={() => handleRemoveItem(item.id)}  // pass the handleRemoveItem function here
+          />
             </div>
           ))}
           <div 
@@ -198,10 +265,11 @@ const PocCanvas: React.FC = () => {
         <br></br>
         <pre>
             {JSON.stringify(
-                items.map(({ functionString, address, inputs }) => ({
+                items.map(({ functionString, address, inputs, inputVariables }) => ({
                     functionString,
                     address,
-                    inputs
+                    inputs,
+                    inputVariables
                 })),
                 null,
                 2
