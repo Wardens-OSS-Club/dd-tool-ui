@@ -1,6 +1,9 @@
 // components/PocCanvas.tsx
 import React, { useState, useEffect } from 'react';
 import DraggableAction from './DraggableAction';
+import { runSequence } from 'dd-tool-package';
+
+const RPC_URL = "https://mainnet.infura.io/v3/5b6375646612417cb32cc467e0ef8724";
 
 interface Item {
   id: string;
@@ -21,6 +24,24 @@ interface VariableInput {
 interface Input {
   name: string;
   type: string;
+}
+
+// Extra interface for DDToolItems in the format the tool requires
+interface DDToolItem {
+  call: {
+    callInfo: {
+      value: null;
+      gasLimit: null;
+      from: string;
+    };
+    contract: {
+      functionString: string;
+      address: string;
+    };
+    inputs: Input[];
+  };
+  outputMappings: string[];
+  inputMappings: string[];
 }
 
 /** 
@@ -85,6 +106,35 @@ const PocCanvas: React.FC = () => {
             inputs: []
         }
       ]
+    
+    // Because the items from the ABI != what we need for DD-tool
+    // We convert with this utility 
+    const transformItems = (oldItems: Item[]): DDToolItem[] => {
+        return oldItems.map((item) => ({
+          call: {
+            callInfo: {
+              value: null,
+              gasLimit: null,
+              from: item.address,
+            },
+            contract: {
+              functionString: item.functionString,
+              address: item.address,
+            },
+            inputs: item.inputs,  // You might need to map inputVariables into the appropriate structure here
+          },
+          outputMappings: ["balance"], // This is hardcoded for now, adjust according to your needs
+          inputMappings: [], // Similarly, adjust according to your needs
+        }));
+      };
+
+    // Let's run the DD tool
+    // This function calls `runSequence` on the imported dd-tool
+    const executeSequence = async () => {
+      const newItems: DDToolItem[] = transformItems(items);
+      const g = await runSequence(newItems, RPC_URL, { alwaysFundCaller: true });
+      console.log("g", g);
+    }
 
     // Handlers for the draggable elements
     const [draggedItem, setDraggedItem] = useState<string | null>(null);
@@ -275,6 +325,10 @@ const PocCanvas: React.FC = () => {
                 2
             )}
         </pre>
+        {/** We just want a quick way to run the current stack of items */}
+        <button onClick={executeSequence} style={{ marginTop: '20px', padding: '10px', fontSize: '1em' }}>
+          Execute Sequence
+        </button>
       </div>
     </div>
     );
