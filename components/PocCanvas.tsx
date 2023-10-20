@@ -123,7 +123,7 @@ const PocCanvas: React.FC = () => {
             },
             inputs: item.inputs,  // Might need to map inputVariables into the appropriate structure here
           },
-          outputMappings: ["balance"], // TODO
+          outputMappings: ["balance"], // TODO -> we need to add the var names dynamically here, might have to modify the Item interface
           inputMappings: [], //
         }));
       };
@@ -142,13 +142,6 @@ const PocCanvas: React.FC = () => {
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: string) => {
       e.dataTransfer.effectAllowed = 'move';
       setDraggedItem(id);
-    };
-  
-    const handleDragEnd = () => {
-      if (draggedItem !== null) {
-        setItems(prevItems => prevItems.filter(item => item.id !== draggedItem));
-        setDraggedItem(null);
-      }
     };
   
     const handleDrop = (e: React.DragEvent<HTMLDivElement>, index: number) => {
