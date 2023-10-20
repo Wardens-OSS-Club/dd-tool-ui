@@ -121,10 +121,10 @@ const PocCanvas: React.FC = () => {
               functionString: item.functionString,
               address: item.address,
             },
-            inputs: item.inputs,  // You might need to map inputVariables into the appropriate structure here
+            inputs: item.inputs,  // Might need to map inputVariables into the appropriate structure here
           },
-          outputMappings: ["balance"], // This is hardcoded for now, adjust according to your needs
-          inputMappings: [], // Similarly, adjust according to your needs
+          outputMappings: ["balance"], // TODO
+          inputMappings: [], //
         }));
       };
 
@@ -133,7 +133,7 @@ const PocCanvas: React.FC = () => {
     const executeSequence = async () => {
       const newItems: DDToolItem[] = transformItems(items);
       const g = await runSequence(newItems, RPC_URL, { alwaysFundCaller: true });
-      console.log("g", g);
+      console.log("Result:", g);
     }
 
     // Handlers for the draggable elements
