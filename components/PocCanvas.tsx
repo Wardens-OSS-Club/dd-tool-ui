@@ -18,7 +18,7 @@ interface Item {
 interface VariableInput {
   name: string;
   type: string;
-  variableInput: string;
+  value: string;
 }
 
 interface Input {
@@ -27,22 +27,22 @@ interface Input {
 }
 
 // Extra interface for DDToolItems in the format the tool requires
-interface DDToolItem {
+type DDToolItem = {
   call: {
     callInfo: {
-      value: null;
-      gasLimit: null;
-      from: string;
-    };
+      value: null | string,
+      gasLimit: null | string,
+      from: string,
+    },
     contract: {
-      functionString: string;
-      address: string;
-    };
-    inputs: Input[];
-  };
-  outputMappings: string[];
-  inputMappings: string[];
-}
+      functionString: string,
+      address: string,
+    },
+    inputs: { type: string, name: string, value: string }[],
+  },
+  outputMappings: string[],
+  inputMappings: { type: string, name: string, value: string }[],
+};
 
 /** 
  * TO DO:
@@ -83,7 +83,7 @@ const PocCanvas: React.FC = () => {
     const customItems = [
       { id: 'custom-1', content: 'Prank', functionString: "INSERT the PRANK", inputs: [{name: "Address", type:"address"}], inputVariables:[] },
       { id: 'custom-2', content: 'Deal', functionString: "INSERT the DEAL", inputs: [{name: "Target", type:"address"}, {name:"Amount", type:"uint256"}] },
-      { id: 'custom-3', content: 'ExpectRevert', functionString: "INSERT the EXEPECTRERVERT", inputs: [] },
+      { id: 'custom-3', content: 'ExpectRevert', functionString: "INSERT the EXPECTREVERT", inputs: [] },
     ];
 
     // Setting up the external functions
@@ -104,34 +104,46 @@ const PocCanvas: React.FC = () => {
             functionString: "function available() external view returns (uint256)",
             address: "0xBA485b556399123261a5F9c95d413B4f93107407",
             inputs: []
-        }
+        },
+        {
+          id: "2",
+          content: "balanceOf()",
+          functionString: "function balanceOf(address account) external view returns (uint256)",
+          address: "0xBA485b556399123261a5F9c95d413B4f93107407",
+          inputs: [{name:"Account", type:"address"}]
+      }
       ]
     
     // Because the items from the ABI != what we need for DD-tool
     // We convert with this utility 
-    const transformItems = (oldItems: Item[]): DDToolItem[] => {
-        return oldItems.map((item) => ({
-          call: {
-            callInfo: {
-              value: null,
-              gasLimit: null,
-              from: item.address,
-            },
-            contract: {
-              functionString: item.functionString,
-              address: item.address,
-            },
-            inputs: item.inputs,  // Might need to map inputVariables into the appropriate structure here
+    const transformItems = (items: any[]): DDToolItem[] => {
+      return items.map(item => ({
+        call: {
+          callInfo: {
+            value: null,
+            gasLimit: null,
+            from: item.address,
           },
-          outputMappings: ["balance"], // TODO -> we need to add the var names dynamically here, might have to modify the Item interface
-          inputMappings: [], //
-        }));
-      };
+          contract: {
+            functionString: item.functionString,
+            address: item.address,
+          },
+          inputs: [], // Assuming inputs will be handled elsewhere or are not needed for this use case
+        },
+        outputMappings: ["balance"], // Adjust as needed
+        inputMappings: item.inputVariables.map(inputVar => ({
+          type: "concrete",
+          name: inputVar.name,
+          value: inputVar.value,
+        })),
+      }));
+    };
 
     // Let's run the DD tool
     // This function calls `runSequence` on the imported dd-tool
     const executeSequence = async () => {
       const newItems: DDToolItem[] = transformItems(items);
+      console.log("Transformed Item Stack", newItems);
       const g = await runSequence(newItems, RPC_URL, { alwaysFundCaller: true });
       console.log("Result:", g);
     }
@@ -177,7 +189,7 @@ const PocCanvas: React.FC = () => {
       const inputVariables: VariableInput[] = itemToAdd.inputs.map(input => ({
           name: input.name,
           type: input.type,
-          variableInput: ''  // Ensuring that variableInput is being set properly
+          value: ''  // Ensuring that variableInput is being set properly
       }));
   
       const newItem: Item = {
@@ -205,7 +217,7 @@ const PocCanvas: React.FC = () => {
             item.inputVariables = inputValues.map((value, index) => ({
                 name: item.inputs[index].name,
                 type: item.inputs[index].type,
-                variableInput: value
+                value: value
             }));
         } else {
             inputValues.forEach((value, index) => {
@@ -214,7 +226,7 @@ const PocCanvas: React.FC = () => {
                     return;
                 }
                 if (item.inputVariables[index]) {
-                    item.inputVariables[index].variableInput = value;
+                    item.inputVariables[index].value = value;
                 }
             });
         }
