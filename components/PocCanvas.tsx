@@ -38,7 +38,7 @@ type DDToolItem = {
       functionString: string,
       address: string,
     },
-    inputs: { type: string, name: string, value: string }[],
+    inputs: any[],
   },
   outputMappings: string[],
   inputMappings: { type: string, name: string, value: string }[],
@@ -47,9 +47,10 @@ type DDToolItem = {
 /** 
  * TO DO:
  * 1) DONE: Fix the dragging and reordering -> can't perfectly order atm
- * 2) Rework to receive json from dd-tool (context or props from a level above)
+ * 2) DONE: Rework to receive json from dd-tool (context or props from a level above)
  * 3) DONE: Fix quirk of "VM Options" button, it's being overlaid by something
  * 4) Prob need to get some user flow done too for proper UX
+ * 5) Decide custom items
  */
 
 // Useful later to extract the functions from the json provided by the dd-tool
@@ -77,9 +78,12 @@ const PocCanvas: React.FC = () => {
             inputVariables: []
         }
     ]);
+
+    const [state, setState] = useState({});
   
     // These are the VM custom instruction set
     // ? Do we hard code this, pull it from the dd tool?
+    // TODO: either add these to the dd-tool side, or create a file
     const customItems = [
       { id: 'custom-1', content: 'Prank', functionString: "INSERT the PRANK", inputs: [{name: "Address", type:"address"}], inputVariables:[] },
       { id: 'custom-2', content: 'Deal', functionString: "INSERT the DEAL", inputs: [{name: "Target", type:"address"}, {name:"Amount", type:"uint256"}] },
@@ -111,38 +115,65 @@ const PocCanvas: React.FC = () => {
           functionString: "function balanceOf(address account) external view returns (uint256)",
           address: "0xBA485b556399123261a5F9c95d413B4f93107407",
           inputs: [{name:"Account", type:"address"}]
-      }
+        },
+        {
+          id: "3",
+          content: "getPoolId()",
+          functionString: "function getPoolId() external view returns (bytes32)",
+          address: "0x1ee442b5326009bb18f2f472d3e0061513d1a0ff",
+          inputs: []
+        },
+        {
+          id: "4",
+          content: "getPoolTokens()",
+          functionString: "function getPoolTokens(bytes32 poolId) external view returns (address[],uint256[],uint256 lastChangeBlock)",
+          address: "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
+          inputs: [{name:"PoolId", type:"bytes32"}]
+        },
       ]
     
     // Because the items from the ABI != what we need for DD-tool
     // We convert with this utility 
-    const transformItems = (items: any[]): DDToolItem[] => {
-      return items.map(item => ({
-        call: {
-          callInfo: {
-            value: null,
-            gasLimit: null,
-            from: item.address,
+    const transformItems = (items: any[], state: {[key: string]:any }): DDToolItem[] => {
+      return items.map(item => {
+        // Parsing the amount of elements in the `returns ()` statement
+        // Then simply creating a state var
+        const outputs = item.functionString.match(/returns \(([^)]+)\)/);
+        let outputMappings = [];
+        if (outputs && outputs[1]) {
+          outputMappings = outputs[1].split(',').map((_: string, index: number) => `${item.content}-var${index + 1}`);
+        }
+    
+        return {
+          call: {
+            callInfo: {
+              value: null,
+              gasLimit: null,
+              from: item.address,
+            },
+            contract: {
+              functionString: item.functionString,
+              address: item.address,
+            },
+            inputs: [], // Assuming inputs will be handled elsewhere or are not needed for this use case
           },
-          contract: {
-            functionString: item.functionString,
-            address: item.address,
-          },
-          inputs: [], // Assuming inputs will be handled elsewhere or are not needed for this use case
-        },
-        outputMappings: ["balance"], // Adjust as needed
-        inputMappings: item.inputVariables.map(inputVar => ({
-          type: "concrete",
-          name: inputVar.name,
-          value: inputVar.value,
-        })),
-      }));
+          outputMappings, // @ts-ignore
+          inputMappings: item.inputVariables.map(inputVar => {
+            const isState = inputVar.value.startsWith('$');
+            return {
+              type: isState ? "state" : "concrete",
+              name: inputVar.name,
+              value: isState ? inputVar.value.slice(1) : inputVar.value,
+            }
+          }),
+        };
+      });
     };
 
     // Let's run the DD tool
     // This function calls `runSequence` on the imported dd-tool
     const executeSequence = async () => {
-      const newItems: DDToolItem[] = transformItems(items);
+      const newItems: DDToolItem[] = transformItems(items, state);
       console.log("Transformed Item Stack", newItems);
       const g = await runSequence(newItems, RPC_URL, { alwaysFundCaller: true });
       console.log("Result:", g);
@@ -191,7 +222,7 @@ const PocCanvas: React.FC = () => {
           type: input.type,
           value: ''  // Ensuring that variableInput is being set properly
       }));
-  
+      // @ts-ignore
       const newItem: Item = {
           ...itemToAdd,
           id: Date.now().toString(),
@@ -224,8 +255,8 @@ const PocCanvas: React.FC = () => {
                 if (value === undefined) {
                     console.error('Value is undefined at index:', index);
                     return;
-                }
-                if (item.inputVariables[index]) {
+                } // @ts-ignore
+                if (item.inputVariables[index]) { // @ts-ignore
                     item.inputVariables[index].value = value;
                 }
             });
