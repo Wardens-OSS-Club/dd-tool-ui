@@ -1,7 +1,9 @@
 // components/PocCanvas.tsx
 import React, { useState, useEffect } from 'react';
 import DraggableAction from './DraggableAction';
+import VariableInput from './StateVariables';
 import { runSequence } from 'dd-tool-package';
+import StateVariables from './StateVariables';
 
 const RPC_URL = "https://mainnet.infura.io/v3/5b6375646612417cb32cc467e0ef8724";
 
@@ -80,6 +82,12 @@ const PocCanvas: React.FC = () => {
     ]);
 
     const [state, setState] = useState({});
+    const [result, setResult] = useState([]);
+    
+    const handleAddVariable = (name: string, value: string) => {
+    setState(prev => ({ ...prev, [name]: value }));
+    console.log("State in canvas: ", state);
+    };
   
     // These are the VM custom instruction set
     // ? Do we hard code this, pull it from the dd tool?
@@ -134,7 +142,7 @@ const PocCanvas: React.FC = () => {
     
     // Because the items from the ABI != what we need for DD-tool
     // We convert with this utility 
-    const transformItems = (items: any[], state: {[key: string]:any }): DDToolItem[] => {
+    const transformItems = (items: any[], state: { [key: string]: any }): DDToolItem[] => {
       return items.map(item => {
         // Parsing the amount of elements in the `returns ()` statement
         // Then simply creating a state var
@@ -160,23 +168,30 @@ const PocCanvas: React.FC = () => {
           outputMappings, // @ts-ignore
           inputMappings: item.inputVariables.map(inputVar => {
             const isState = inputVar.value.startsWith('$');
+            const isVar = inputVar.value.startsWith('#');
+            const stateValue = isVar ? state[inputVar.value.slice(1)] : undefined;
+            console.log("state value: ", stateValue);
+
             return {
-              type: isState ? "state" : "concrete",
+              type: stateValue !== undefined ? "concrete" : (isState ? "state" : "concrete"),
               name: inputVar.name,
-              value: isState ? inputVar.value.slice(1) : inputVar.value,
+              value: stateValue !== undefined ? stateValue : (isState ? inputVar.value.slice(1) : inputVar.value),
             }
           }),
         };
       });
     };
+    
 
     // Let's run the DD tool
     // This function calls `runSequence` on the imported dd-tool
     const executeSequence = async () => {
       const newItems: DDToolItem[] = transformItems(items, state);
       console.log("Transformed Item Stack", newItems);
+      console.log("STATE IN CANVAS: ", state);
       const g = await runSequence(newItems, RPC_URL, { alwaysFundCaller: true });
       console.log("Result:", g);
+      setResult(g);
     }
 
     // Handlers for the draggable elements
@@ -283,12 +298,18 @@ const PocCanvas: React.FC = () => {
               </div>
           </div>
           
-          <div>
+          <div style={{ marginBottom: '30px' }}>
               <h2>Contract Functions</h2>
               <div style={{ border: '1px solid #ccc', borderRadius: '5px', padding: '10px' }}>
                   {MOCK_CONTRACT.map((item) => (
                       <DraggableAction key={item.id} id={item.id} content={item.content} inputs={item.inputs || []} onUpdateInputVariables={(inputValues) => handleUpdateInputVariables(item.id, inputValues)} onDragStart={handleDragStart} />
                   ))}
+              </div>
+          </div>
+          <div>
+          <h2>Custom Variables</h2>
+              <div style={{ border: '1px solid #ccc', borderRadius: '5px', padding: '10px' }}>
+                 <StateVariables onAddVariable={handleAddVariable} state={state}></StateVariables>
               </div>
           </div>
       </div>
