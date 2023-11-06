@@ -4,9 +4,12 @@ import DraggableAction from './DraggableAction';
 import VariableInput from './StateVariables';
 import { runSequence } from 'dd-tool-package';
 import StateVariables from './StateVariables';
+import AbiModal from './AbiModal';
+import { ethers } from 'ethers';
 
 const RPC_URL = "https://mainnet.infura.io/v3/5b6375646612417cb32cc467e0ef8724";
 
+// Items are placed in the execution array
 interface Item {
   id: string;
   content: string;
@@ -16,6 +19,7 @@ interface Item {
   inputVariables?: VariableInput[];
   onRemove?: () => void; 
 }
+
 
 interface VariableInput {
   name: string;
@@ -29,6 +33,7 @@ interface Input {
 }
 
 // Extra interface for DDToolItems in the format the tool requires
+// There is a conversion from Items to DDToolItems
 type DDToolItem = {
   call: {
     callInfo: {
@@ -43,33 +48,20 @@ type DDToolItem = {
     inputs: any[],
   },
   outputMappings: string[],
-  inputMappings: { type: string, name: string, value: string }[],
+  inputMappings: VariableInput[],
 };
 
 /** 
  * TO DO:
- * 1) DONE: Fix the dragging and reordering -> can't perfectly order atm
- * 2) DONE: Rework to receive json from dd-tool (context or props from a level above)
- * 3) DONE: Fix quirk of "VM Options" button, it's being overlaid by something
- * 4) Prob need to get some user flow done too for proper UX
- * 5) Decide custom items
+    1) Convert from state to ethers
+    2) Clean up Inputs vs VariableInputs (only need one)
+    3) Safe defaults
  */
-
-// Useful later to extract the functions from the json provided by the dd-tool
-function extractFunctionName(str: string): string | null {
-    // Regular expression to find function name
-    // It starts with the word "function", followed by spaces, then captures the function name and params
-    const regex = /function\s+([a-zA-Z0-9_]+\([^)]*\))/;
-    const match = str.match(regex);
-  
-    // If there's a match, it will be at index 1 due to the capture group in the regex
-    return match ? match[1] : null;
-  }
-  
 
 const PocCanvas: React.FC = () => {
     // We start with this one function as an example
     // Note: `items` is the array of instructions being constructed
+    // TO DO: Replace with safe default
     const [items, setItems] = useState<Item[]>([
         {
             id: "0",
@@ -81,16 +73,17 @@ const PocCanvas: React.FC = () => {
         }
     ]);
 
+    // DD-tool requires state to be passed to it
     const [state, setState] = useState({});
     const [result, setResult] = useState([]);
     
+    // Helper to add custom variable to state
     const handleAddVariable = (name: string, value: string) => {
     setState(prev => ({ ...prev, [name]: value }));
     console.log("State in canvas: ", state);
     };
   
     // These are the VM custom instruction set
-    // ? Do we hard code this, pull it from the dd tool?
     // TODO: either add these to the dd-tool side, or create a file
     const customItems = [
       { id: 'custom-1', content: 'Prank', functionString: "INSERT the PRANK", inputs: [{name: "Address", type:"address"}], inputVariables:[] },
@@ -100,46 +93,81 @@ const PocCanvas: React.FC = () => {
 
     // Setting up the external functions
     // This will usually be given by the json the dd-tool provides
-    // TODO rework to get this from props or ? context
     // This can be passed in from the dd-tool, but want to show more options for now
     const MOCK_CONTRACT = [
-        {
-            id: "0",
-            content: "getPricePerFullShare()",
-            functionString: "function getPricePerFullShare() external view returns (uint256)",
-            address: "0xBA485b556399123261a5F9c95d413B4f93107407",
-            inputs: []
-        },
-        {
-            id: "1",
-            content: "available()",
-            functionString: "function available() external view returns (uint256)",
-            address: "0xBA485b556399123261a5F9c95d413B4f93107407",
-            inputs: []
-        },
-        {
-          id: "2",
-          content: "balanceOf()",
-          functionString: "function balanceOf(address account) external view returns (uint256)",
+      {
+          id: "0",
+          content: "getPricePerFullShare()",
+          functionString: "function getPricePerFullShare() external view returns (uint256)",
           address: "0xBA485b556399123261a5F9c95d413B4f93107407",
-          inputs: [{name:"Account", type:"address"}]
-        },
-        {
-          id: "3",
-          content: "getPoolId()",
-          functionString: "function getPoolId() external view returns (bytes32)",
-          address: "0x1ee442b5326009bb18f2f472d3e0061513d1a0ff",
           inputs: []
-        },
-        {
-          id: "4",
-          content: "getPoolTokens()",
-          functionString: "function getPoolTokens(bytes32 poolId) external view returns (address[],uint256[],uint256 lastChangeBlock)",
-          address: "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
-          inputs: [{name:"PoolId", type:"bytes32"}]
-        },
-      ]
+      },
+      {
+          id: "1",
+          content: "available()",
+          functionString: "function available() external view returns (uint256)",
+          address: "0xBA485b556399123261a5F9c95d413B4f93107407",
+          inputs: []
+      },
+      {
+        id: "2",
+        content: "balanceOf()",
+        functionString: "function balanceOf(address account) external view returns (uint256)",
+        address: "0xBA485b556399123261a5F9c95d413B4f93107407",
+        inputs: [{name:"Account", type:"address"}]
+      },
+      {
+        id: "3",
+        content: "getPoolId()",
+        functionString: "function getPoolId() external view returns (bytes32)",
+        address: "0x1ee442b5326009bb18f2f472d3e0061513d1a0ff",
+        inputs: []
+      },
+      {
+        id: "4",
+        content: "getPoolTokens()",
+        functionString: "function getPoolTokens(bytes32 poolId) external view returns (address[],uint256[],uint256 lastChangeBlock)",
+        address: "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
+        inputs: [{name:"PoolId", type:"bytes32"}]
+      },
+    ]
+
+    // ABI importing and parsing
+    const [importedAbi, setImportedAbi] = useState(MOCK_CONTRACT);
+    const [isAbiModalOpen, setAbiModalOpen] = useState(false);
+
+    // Accept and convert json abi to 
+    const handleAbiSubmit = (abi: string, targetAddress: string) => {
+      try {
+        const iface = new ethers.Interface(abi);
+        const parsedValues: any[] = parseAbiFunctions(iface.format(true), iface, targetAddress);
+        setImportedAbi(parsedValues);
+        console.log(parsedValues);
+      } catch (error) {
+        console.error('Invalid ABI');
+      }
+    };
     
+    function parseAbiFunctions(abiArray: any[], iface: ethers.Interface, targetAddress: string) {
+      let i: number = 0;
+      return abiArray
+        .filter((item) => item.startsWith('function')) // Only keep items that are functions
+        .map((funcString) => {
+          // Extract the function name and parameters
+          const content = funcString.substring(9, funcString.indexOf('(')).trim();
+          // We incr the id to assist with unique id gen
+          i++;
+          // Build and return the object
+          return {
+            id: (Date.now()+i).toString(), // ID generation logic: timestamp + i
+            content,
+            functionString: funcString,
+            address: targetAddress, // Address should be provided here
+            inputs: iface.getFunction(funcString)?.inputs
+          };
+        });
+    }
+
     // Because the items from the ABI != what we need for DD-tool
     // We convert with this utility 
     const transformItems = (items: any[], state: { [key: string]: any }): DDToolItem[] => {
@@ -181,7 +209,6 @@ const PocCanvas: React.FC = () => {
         };
       });
     };
-    
 
     // Let's run the DD tool
     // This function calls `runSequence` on the imported dd-tool
@@ -227,7 +254,7 @@ const PocCanvas: React.FC = () => {
   
       if (!draggedItem) return;
   
-      const allAvailableItems = [...MOCK_CONTRACT, ...customItems];
+      const allAvailableItems = [...importedAbi, ...customItems];
       const itemToAdd = allAvailableItems.find(item => item.id === draggedItem);
   
       if (!itemToAdd) return;
@@ -252,6 +279,7 @@ const PocCanvas: React.FC = () => {
       console.log('Items state updated:', items);
   }, [items]);
 
+  // Helper to update the underlying Item list
   const handleUpdateInputVariables = (itemId: string, inputValues: string[]) => {
     console.log('handleUpdateInputVariables inputValues:', inputValues);  // Log for debugging
     setItems(prevItems => {
@@ -278,9 +306,9 @@ const PocCanvas: React.FC = () => {
         }
         return updatedItems;
     });
-};
+  };
 
-    const handleRemoveItem = (itemId: string) => {
+  const handleRemoveItem = (itemId: string) => {
       setItems(prevItems => prevItems.filter(item => item.id !== itemId));
     };
 
@@ -301,15 +329,26 @@ const PocCanvas: React.FC = () => {
           <div style={{ marginBottom: '30px' }}>
               <h2>Contract Functions</h2>
               <div style={{ border: '1px solid #ccc', borderRadius: '5px', padding: '10px' }}>
-                  {MOCK_CONTRACT.map((item) => (
+                  { importedAbi.map((item) => (
                       <DraggableAction key={item.id} id={item.id} content={item.content} inputs={item.inputs || []} onUpdateInputVariables={(inputValues) => handleUpdateInputVariables(item.id, inputValues)} onDragStart={handleDragStart} />
                   ))}
               </div>
           </div>
-          <div>
+          <div style={{ marginBottom: '30px' }}>
           <h2>Custom Variables</h2>
               <div style={{ border: '1px solid #ccc', borderRadius: '5px', padding: '10px' }}>
                  <StateVariables onAddVariable={handleAddVariable} state={state}></StateVariables>
+              </div>
+          </div>
+          <div>
+              <div style={{ border: '1px solid #ccc', borderRadius: '5px', padding: '10px' }}>
+              <h2>Upload ABI</h2>
+              <button onClick={() => setAbiModalOpen(true)}>Open ABI Modal</button>
+              <AbiModal
+                isOpen={isAbiModalOpen}
+                onClose={() => setAbiModalOpen(false)}
+                onAbiSubmit={handleAbiSubmit}
+              />
               </div>
           </div>
       </div>
