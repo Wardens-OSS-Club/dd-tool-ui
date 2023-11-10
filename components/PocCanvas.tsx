@@ -343,7 +343,22 @@ const PocCanvas: React.FC = () => {
           <div>
               <div style={{ border: '1px solid #ccc', borderRadius: '5px', padding: '10px' }}>
               <h2>Upload ABI</h2>
-              <button onClick={() => setAbiModalOpen(true)}>Open ABI Modal</button>
+              <button 
+                onClick={() => setAbiModalOpen(true)} 
+                style={{
+                  position: 'relative',
+                  background: 'white',
+                  color: 'black',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  lineHeight: '20px',
+                  textAlign: 'center',
+                  padding: '10px'
+                }}
+              >
+                Open ABI Modal
+              </button>
               <AbiModal
                 isOpen={isAbiModalOpen}
                 onClose={() => setAbiModalOpen(false)}
