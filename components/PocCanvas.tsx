@@ -76,6 +76,7 @@ const PocCanvas: React.FC = () => {
     // DD-tool requires state to be passed to it
     const [state, setState] = useState({});
     const [result, setResult] = useState([]);
+    const [inputOptions, setInputOptions] = useState<any[]>([]);
     
     // Helper to add custom variable to state
     const handleAddVariable = (name: string, value: string) => {
@@ -166,6 +167,16 @@ const PocCanvas: React.FC = () => {
             inputs: iface.getFunction(funcString)?.inputs
           };
         });
+    }
+
+    // Helper to generate outputMappings
+    function createOutputMappings(functionString: string, content: string): string[] {
+      const match = functionString.match(/returns\s*\(([^)]+)\)/);
+      if (match && match[1]) {
+        return match[1].split(',')
+          .map((_, index) => `${content}-var${index + 1}`);
+      }
+      return [];
     }
 
     // Because the items from the ABI != what we need for DD-tool
@@ -272,6 +283,7 @@ const PocCanvas: React.FC = () => {
       };
   
       setItems(prev => [...prev, newItem]);
+      setInputOptions(aggregateOutputMappings(items));
       setDraggedItem(null);
     };
 
@@ -291,6 +303,7 @@ const PocCanvas: React.FC = () => {
       };
   
       setItems(prev => [...prev, newItem]);
+      setInputOptions(aggregateOutputMappings(items));
     };
 
     useEffect(() => {
@@ -330,6 +343,17 @@ const PocCanvas: React.FC = () => {
       setItems(prevItems => prevItems.filter(item => item.id !== itemId));
     };
 
+  // Let's create some options for the drop down menu
+  function aggregateOutputMappings(items: any[]): string[] {
+    const allOutputMappings = new Set<string>();
+  
+    items.forEach(item => {
+      const outputMappings = createOutputMappings(item.functionString, item.content);
+      outputMappings.forEach(mapping => allOutputMappings.add(mapping));
+    });
+  
+    return Array.from(allOutputMappings);
+  }
 
     return (
       <div style={{ fontFamily: 'Arial, sans-serif', display: 'flex', height: '100vh' }}>
@@ -422,6 +446,7 @@ const PocCanvas: React.FC = () => {
             onUpdateInputVariables={(inputValues) => handleUpdateInputVariables(item.id, inputValues)} 
             onDragStart={handleDragStart}
             onRemove={() => handleRemoveItem(item.id)}
+            options={inputOptions}
           />
             </div>
           ))}

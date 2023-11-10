@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ComboBox from './ComboBox';
 
 interface DraggableActionProps {
   id: string;
@@ -8,9 +9,10 @@ interface DraggableActionProps {
   onDragStart: (e: React.DragEvent<HTMLDivElement>, id: string) => void;
   onRemove?: () => void;
   onAddToCanvas?: () => void;
+  options?: string[];
 }
 
-const DraggableAction: React.FC<DraggableActionProps> = ({ id, content, inputs, onDragStart, onRemove, onUpdateInputVariables, onAddToCanvas }) => {
+const DraggableAction: React.FC<DraggableActionProps> = ({ id, content, inputs, options, onDragStart, onRemove, onUpdateInputVariables, onAddToCanvas }) => {
 
   const [inputValues, setInputValues] = useState<string[]>(Array(inputs.length).fill(''));
 
@@ -82,12 +84,12 @@ const DraggableAction: React.FC<DraggableActionProps> = ({ id, content, inputs, 
       {inputs?.map((input, index) => (
         <div style={{ display: 'flex', alignItems: 'center', marginTop: '8px' }} key={index}>
           <label style={{ flex: 1, fontSize: '0.9em' }}>{input.name}:</label>
-          <input 
-            type="text" 
+          <ComboBox 
             value={inputValues[index] || ''} 
-            onChange={(e) => handleInputChange(index, e.target.value)}
+            onChange={(value) => handleInputChange(index, value)}
             onBlur={() => onUpdateInputVariables?.(inputValues)}
-            style={{ flex: 2, padding: '4px', borderRadius: '4px', border: '1px solid #ccc' }}  // Improved input field styling
+            options = {options}
+
           />
         </div>
       ))}
