@@ -273,11 +273,29 @@ const PocCanvas: React.FC = () => {
   
       setItems(prev => [...prev, newItem]);
       setDraggedItem(null);
-  };
+    };
+
+    // Allow users to add a function to the stack without having to drag it around
+    // Useful for large ABIs with multiple functions that will take up a lot of space
+    const addToCanvas = (itemToAdd: Item) => {
+      const inputVariables: VariableInput[] = itemToAdd.inputs.map(input => ({
+        name: input.name,
+        type: input.type,
+        value: '' 
+      }));
+      // @ts-ignore
+      const newItem: Item = {
+          ...itemToAdd,
+          id: Date.now().toString(),
+          inputVariables 
+      };
+  
+      setItems(prev => [...prev, newItem]);
+    };
 
     useEffect(() => {
       console.log('Items state updated:', items);
-  }, [items]);
+    }, [items]);
 
   // Helper to update the underlying Item list
   const handleUpdateInputVariables = (itemId: string, inputValues: string[]) => {
@@ -330,7 +348,7 @@ const PocCanvas: React.FC = () => {
               <h2>Contract Functions</h2>
               <div style={{ border: '1px solid #ccc', borderRadius: '5px', padding: '10px' }}>
                   { importedAbi.map((item) => (
-                      <DraggableAction key={item.id} id={item.id} content={item.content} inputs={item.inputs || []} onUpdateInputVariables={(inputValues) => handleUpdateInputVariables(item.id, inputValues)} onDragStart={handleDragStart} />
+                      <DraggableAction key={item.id} id={item.id} content={item.content} inputs={item.inputs || []} onUpdateInputVariables={(inputValues) => handleUpdateInputVariables(item.id, inputValues)} onDragStart={handleDragStart} onAddToCanvas={() => addToCanvas(item)}/>
                   ))}
               </div>
           </div>
@@ -403,7 +421,7 @@ const PocCanvas: React.FC = () => {
             inputs={item.inputs || []} 
             onUpdateInputVariables={(inputValues) => handleUpdateInputVariables(item.id, inputValues)} 
             onDragStart={handleDragStart}
-            onRemove={() => handleRemoveItem(item.id)}  // pass the handleRemoveItem function here
+            onRemove={() => handleRemoveItem(item.id)}
           />
             </div>
           ))}

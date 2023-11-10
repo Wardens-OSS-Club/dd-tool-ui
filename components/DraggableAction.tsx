@@ -7,9 +7,10 @@ interface DraggableActionProps {
   onUpdateInputVariables?: (values: string[]) => void;
   onDragStart: (e: React.DragEvent<HTMLDivElement>, id: string) => void;
   onRemove?: () => void;
+  onAddToCanvas?: () => void;
 }
 
-const DraggableAction: React.FC<DraggableActionProps> = ({ id, content, inputs, onDragStart, onRemove, onUpdateInputVariables }) => {
+const DraggableAction: React.FC<DraggableActionProps> = ({ id, content, inputs, onDragStart, onRemove, onUpdateInputVariables, onAddToCanvas }) => {
 
   const [inputValues, setInputValues] = useState<string[]>(Array(inputs.length).fill(''));
 
@@ -54,6 +55,29 @@ const DraggableAction: React.FC<DraggableActionProps> = ({ id, content, inputs, 
           X
         </button>
       )}
+      {onAddToCanvas && (
+              <button 
+                onClick={onAddToCanvas}
+                style={{
+                  position: 'absolute',
+                  top: '2px',
+                  right: '2px',
+                  background: 'green',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '20px',
+                  height: '20px',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  lineHeight: '20px',
+                  textAlign: 'center'
+                }}
+              >
+                +
+              </button>
+            )}
+
       <div style={{marginBottom: '8px'}}>{content}</div>
       {inputs?.map((input, index) => (
         <div style={{ display: 'flex', alignItems: 'center', marginTop: '8px' }} key={index}>
