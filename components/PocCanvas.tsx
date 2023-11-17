@@ -6,6 +6,7 @@ import { runSequence } from 'dd-tool-package';
 import StateVariables from './StateVariables';
 import AbiModal from './AbiModal';
 import { ethers } from 'ethers';
+import ResultDisplay from './ResultDisplay';
 
 const RPC_URL = "https://mainnet.infura.io/v3/5b6375646612417cb32cc467e0ef8724";
 
@@ -483,6 +484,11 @@ const PocCanvas: React.FC = () => {
         <button onClick={executeSequence} style={{ marginTop: '20px', padding: '10px', fontSize: '1em' }}>
           Execute Sequence
         </button>
+
+        <br></br>
+        <div style={{ border: '1px solid #ccc', borderRadius: '5px', padding: '10px', marginTop: '10px', background: 'white' }}>
+          <ResultDisplay result={result} />
+        </div>
       </div>
     </div>
     );
