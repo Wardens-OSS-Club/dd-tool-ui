@@ -13,13 +13,23 @@ const ComboBox: React.FC<ComboBoxProps> = ({ options, onChange, onBlur, value })
 
   useEffect(() => {
     // Update displayValue when the value prop changes
-    setDisplayValue(value.replace(/^\$/, ''));
+    if (value.startsWith("#")) {
+      setDisplayValue(value.replace(/^\#/, ''));
+    } else if (value.startsWith("$")) {
+      setDisplayValue(value.replace(/^\$/, ''));
+    } 
+
   }, [value]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
     setDisplayValue(newValue);
-    onChange(`$${newValue}`); // Add the $ symbol when passing the value to the onChange prop
+    if (newValue.startsWith("#")) {
+      onChange(newValue);
+    } else {
+      onChange(`$${newValue}`); // Add the $ symbol when passing the value to the onChange prop
+    }
+
   };
 
   return (

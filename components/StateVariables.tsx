@@ -11,7 +11,7 @@ const StateVariables: React.FC<StateVariablesProps> = ({ onAddVariable, state })
 
   const handleAddVariable = () => {
     if (variableName && variableValue) {
-      onAddVariable(variableName, variableValue);
+      onAddVariable("#" + variableName, variableValue);
       setVariableName('');
       setVariableValue('');
     }

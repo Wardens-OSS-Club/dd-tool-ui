@@ -207,9 +207,12 @@ const PocCanvas: React.FC = () => {
           },
           outputMappings, // @ts-ignore
           inputMappings: item.inputVariables.map(inputVar => {
+            console.log("Input Vars: ", inputVar)
             const isState = inputVar.value.startsWith('$');
             const isVar = inputVar.value.startsWith('#');
-            const stateValue = isVar ? state[inputVar.value.slice(1)] : undefined;
+            //const isCustom = inputVar.value.startsWith("custom :");
+            //const customValue = isCustom ? inputVar.value.slice(8) : undefined;
+            const stateValue = isVar ? state[inputVar.value] : undefined;
             console.log("state value: ", stateValue);
 
             return {
@@ -352,6 +355,8 @@ const PocCanvas: React.FC = () => {
       const outputMappings = createOutputMappings(item.functionString, item.content);
       outputMappings.forEach(mapping => allOutputMappings.add(mapping));
     });
+
+    Object.keys(state).forEach(key => allOutputMappings.add(key));
   
     return Array.from(allOutputMappings);
   }
