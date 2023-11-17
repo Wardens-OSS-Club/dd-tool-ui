@@ -7,6 +7,7 @@ interface ResultDisplayProps {
 
 const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
     const itemStyle = {
+        maxWidth: '1000px',
         background: '#f0f0f0', // Light gray background
         border: '1px solid #ddd', // Subtle border
         borderRadius: '4px', // Rounded corners
@@ -17,6 +18,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
         justifyContent: 'space-between', // Space between key and value
         color: '#333', // Darker text for readability
         fontSize: '14px', // Font size
+        overflowWrap: 'break-word',
       };
     
       const keyStyle = {
@@ -26,6 +28,9 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
 
       const boxStyle = {
         background: 'white', // Light gray background
+        maxWidth: '1000px',
+        overflowWrap: 'break-word',
+        boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)',
       }
 
 const renderValue = (value: any, parentKey = '') => {

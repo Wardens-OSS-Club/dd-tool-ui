@@ -26,7 +26,7 @@ const StateVariables: React.FC<StateVariablesProps> = ({ onAddVariable, state })
   };
 
   return (
-    <div style={{ padding: '8px', backgroundColor: 'lightgray', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+    <div style={{ padding: '8px', backgroundColor: '#E1EBEC', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
         <label style={{ flex: 1, fontSize: '0.9em' }}>Variable Name:</label>
         <input 

@@ -1,0 +1,39 @@
+.header {
+    background-color: #ebf4ff; /* Light blue background */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  .header-section {
+    display: flex;
+    align-items: center;
+  }
+  
+  .header-section.left {
+    /* Additional styles if needed */
+  }
+  
+  .header-section.right {
+    /* Additional styles if needed */
+  }
+  
+  .header-title {
+    font-size: 1.5rem;
+    color: #333; /* Dark gray color for contrast */
+    font-weight: 600; /* Semi-bold font weight */
+  }
+  
+  .header-project-name {
+    font-size: 1rem;
+    color: #1a202c; /* Slightly darker color */
+    background: #ffffff; /* White background for the project name */
+    border-radius: 20px; /* Rounded pill shape */
+    padding: 0.5rem 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Shadow for the project name */
+    font-weight: 600; /* Semi-bold font weight */
+  }
+  

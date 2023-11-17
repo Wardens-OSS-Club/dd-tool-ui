@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import PocCanvas from '../components/PocCanvas';
 import { runSequence } from 'dd-tool-package';
 import { MOCK_STEPS } from 'dd-tool-package/mock';
+import Header from '@/components/Header';
 
 // TODO: Setup Ganache HERE and not via the package
 // Run
@@ -29,10 +30,15 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      
+
       <main className={styles.main}>
         <div className={styles.heading}>
-          <h1 className={styles.gradientText}>Build Your POC</h1>
+          <h1 style={{
+              color: 'linear-gradient(to right, #bdc3c7, #2c3e50)',
+              fontSize: '2.5em',
+              margin: '0',
+              paddingBottom: '50px'
+          }}>Build Your POC</h1>
         </div>
 
         <div className={styles.description}>

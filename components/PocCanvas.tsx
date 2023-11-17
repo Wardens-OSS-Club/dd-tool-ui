@@ -78,6 +78,11 @@ const PocCanvas: React.FC = () => {
     const [state, setState] = useState({});
     const [result, setResult] = useState([]);
     const [inputOptions, setInputOptions] = useState<any[]>([]);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+    const toggleDrawer = () => {
+      setIsDrawerOpen(!isDrawerOpen);
+    };
     
     // Helper to add custom variable to state
     const handleAddVariable = (name: string, value: string) => {
@@ -363,46 +368,122 @@ const PocCanvas: React.FC = () => {
 
     return (
       <div style={{ fontFamily: 'Arial, sans-serif', display: 'flex', height: '100vh' }}>
-      <div style={{ width: '40%', borderRight: '1px solid #ccc', padding: '20px', boxSizing: 'border-box' }}>
-          
-          <div style={{ marginBottom: '30px' }}>
+      <div style={{ width: '40%', padding: '20px', boxSizing: 'border-box' }}>
+
+      {/* Drawer Toggle Button */}
+      <button onClick={toggleDrawer} 
+        style={{
+          position: 'fixed', // Fixed position relative to the viewport
+          top: '38%', // Distance from the bottom of the viewport
+          right: '5%', // Distance from the right of the viewport
+          padding: '10px',
+          fontSize: '1em',
+          backgroundColor: '#23424A', 
+          color: 'white', // Text color
+          border: 'none',
+          borderRadius: '5px', // Rounded corners
+          boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)', // Subtle shadow for depth
+          cursor: 'pointer',
+          zIndex: 1000, // Ensure it's above other elements
+        }}
+      >
+        {isDrawerOpen ? 'Close' : 'Menu'}
+      </button>
+  
+      {/* Drawer */}
+      <div style={{
+        position: 'fixed',
+        width: '30%',
+        height: '100%',
+        top: '0',
+        left: isDrawerOpen ? '0' : '-100%',
+        backgroundColor: '#FFFFFF',
+        boxShadow: '2px 0 8px rgba(0, 0, 0, 0.2)',
+        transition: 'left 0.3s',
+        zIndex: 1000,
+        overflowY: 'auto',
+        padding: '20px',
+      }}>
+
+        {/* VM Options */}
+        <div 
+          style={{
+            position: 'absolute',
+            top: '5%',
+            right: '5%',
+            background: 'linear-gradient(145deg, #f3456f, #c0392b)', // Gradient background
+            color: 'white',
+            border: 'none',
+            borderRadius: '15px', // Rounded corners but not a full circle
+            width: '15px', // Slightly larger button for a clearer icon
+            height: '15px',
+            cursor: 'pointer',
+            fontSize: '16px', // Larger font size for the icon
+            lineHeight: '15px', // Center the line height with the height of the button
+            textAlign: 'center',
+            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)', // Subtle shadow for depth
+            transition: 'all 0.3s ease', // Smooth transition for hover effects
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.transform = 'scale(1.1)'; // Grow the button on hover
+            e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.3)'; // Deeper shadow on hover
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = 'scale(1)'; // Button returns to original size
+            e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.2)'; // Shadow returns to original
+          }}
+        >
+          <button 
+            onClick={toggleDrawer}>
+          {isDrawerOpen ? 'Close' : 'Menu'}
+          </button>
+        </div>
+        <div style={{ marginTop: '10%', marginBottom: '30px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)', borderRadius: '5px'}}>
               <h2>VM Options</h2>
-              <div style={{ border: '1px solid #ccc', borderRadius: '5px', padding: '10px' }}>
+              <div style={{ borderRadius: '5px', padding: '10px' }}>
                   {customItems.map((item) => (
                       <DraggableAction key={item.id} id={item.id} content={item.content} inputs={item.inputs || []} onUpdateInputVariables={(inputValues) => handleUpdateInputVariables(item.id, inputValues)} onDragStart={handleDragStart} />
                   ))}
               </div>
           </div>
-          
-          <div style={{ marginBottom: '30px' }}>
+        
+        {/* Contract Functions */}
+        <div style={{ marginBottom: '30px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' , borderRadius: '5px'}}>
               <h2>Contract Functions</h2>
-              <div style={{ border: '1px solid #ccc', borderRadius: '5px', padding: '10px' }}>
+              <div style={{ borderRadius: '5px', padding: '10px' }}>
                   { importedAbi.map((item) => (
                       <DraggableAction key={item.id} id={item.id} content={item.content} inputs={item.inputs || []} onUpdateInputVariables={(inputValues) => handleUpdateInputVariables(item.id, inputValues)} onDragStart={handleDragStart} onAddToCanvas={() => addToCanvas(item)}/>
                   ))}
               </div>
-          </div>
-          <div style={{ marginBottom: '30px' }}>
+        </div>
+        
+        {/* Custom Variables */}
+        <div style={{ marginBottom: '30px' , boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
           <h2>Custom Variables</h2>
-              <div style={{ border: '1px solid #ccc', borderRadius: '5px', padding: '10px' }}>
+              <div style={{borderRadius: '5px', padding: '10px' }}>
                  <StateVariables onAddVariable={handleAddVariable} state={state}></StateVariables>
               </div>
           </div>
           <div>
-              <div style={{ border: '1px solid #ccc', borderRadius: '5px', padding: '10px' }}>
-              <h2>Upload ABI</h2>
+
+        {/* Upload ABI Button */}
+        <div style={{ borderRadius: '5px', padding: '10px' }}>
               <button 
                 onClick={() => setAbiModalOpen(true)} 
                 style={{
-                  position: 'relative',
-                  background: 'white',
-                  color: 'black',
+
+                  position: 'fixed', // Fixed position relative to the viewport
+                  bottom: '55%', // Distance from the bottom of the viewport
+                  right: '5%', // Distance from the right of the viewport
+                  padding: '10px',
+                  fontSize: '1em',
+                  backgroundColor: '#23424A', // Example background color
+                  color: 'white', // Text color
                   border: 'none',
+                  borderRadius: '5px', // Rounded corners
+                  boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)', // Subtle shadow for depth
                   cursor: 'pointer',
-                  fontSize: '12px',
-                  lineHeight: '20px',
-                  textAlign: 'center',
-                  padding: '10px'
+                  zIndex: 1000, // Ensure it's above other elements
                 }}
               >
                 Open ABI Modal
@@ -413,10 +494,11 @@ const PocCanvas: React.FC = () => {
                 onAbiSubmit={handleAbiSubmit}
               />
               </div>
+            </div>
           </div>
       </div>
 
-      <div style={{ flex: 1, padding: '20px', overflow: 'auto' }}>
+      <div style={ isDrawerOpen ? { width: '50vw', padding: '40px', position: 'absolute', left:'30%'} : { width: '50vw', padding: '20px', position: 'absolute'}}>
           <h4>Drag and Drop</h4>
           <br/>
           <div 
@@ -424,11 +506,11 @@ const PocCanvas: React.FC = () => {
               onDragOver={(e) => e.preventDefault()}
               style={{ 
                   minHeight: '100px', 
-                  border: '2px dashed #cccccc',
                   borderRadius: '5px',
                   padding: '20px',
                   backgroundColor: '#f9f9f9',
-                  position: 'relative'
+                  position: 'relative',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
               }}
           >
         {items.map((item, index) => (
@@ -486,12 +568,28 @@ const PocCanvas: React.FC = () => {
             )}
         </pre>
         {/** We just want a quick way to run the current stack of items */}
-        <button onClick={executeSequence} style={{ marginTop: '20px', padding: '10px', fontSize: '1em' }}>
+        <button 
+          onClick={executeSequence} 
+          style={{
+            position: 'fixed', // Fixed position relative to the viewport
+            bottom: '50%', // Distance from the bottom of the viewport
+            right: '5%', // Distance from the right of the viewport
+            padding: '10px',
+            fontSize: '1em',
+            backgroundColor: '#23424A', // Example background color
+            color: 'white', // Text color
+            border: 'none',
+            borderRadius: '5px', // Rounded corners
+            boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)', // Subtle shadow for depth
+            cursor: 'pointer',
+            zIndex: 1000, // Ensure it's above other elements
+          }}
+        >
           Execute Sequence
         </button>
 
         <br></br>
-        <div style={{ border: '1px solid #ccc', borderRadius: '5px', padding: '10px', marginTop: '10px', background: 'white' }}>
+        <div style={{overflow: 'visible', border: '1px solid #ccc', borderRadius: '5px', padding: '10px', marginTop: '10px', background: 'white' }}>
           <ResultDisplay result={result} />
         </div>
       </div>
