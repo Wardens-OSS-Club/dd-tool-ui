@@ -188,7 +188,14 @@ const PocCanvas: React.FC = () => {
     // Because the items from the ABI != what we need for DD-tool
     // We convert with this utility 
     const transformItems = (items: any[], state: { [key: string]: any }): DDToolItem[] => {
+      let prankCaller: string = "0xBE0eB53F46cd790Cd13851d5EFf43D12404d33E8";
       return items.map(item => {
+        // Handle the prank
+        if (item.content === 'Prank') {
+          prankCaller = item.inputVariables[0].value.slice(1);
+          console.log("The prank is set: ", prankCaller)
+          return null;
+        }
         // Parsing the amount of elements in the `returns ()` statement
         // Then simply creating a state var
         const outputs = item.functionString.match(/returns \(([^)]+)\)/);
@@ -202,7 +209,7 @@ const PocCanvas: React.FC = () => {
             callInfo: {
               value: null,
               gasLimit: null,
-              from: item.address,
+              from: prankCaller,
             },
             contract: {
               functionString: item.functionString,
@@ -215,19 +222,19 @@ const PocCanvas: React.FC = () => {
             console.log("Input Vars: ", inputVar)
             const isState = inputVar.value.startsWith('$');
             const isVar = inputVar.value.startsWith('#');
-            //const isCustom = inputVar.value.startsWith("custom :");
-            //const customValue = isCustom ? inputVar.value.slice(8) : undefined;
             const stateValue = isVar ? state[inputVar.value] : undefined;
             console.log("state value: ", stateValue);
+            const directInput = state[inputVar.value] == undefined && !isVar;
+            console.log("Direct input: ", directInput);
 
             return {
               type: stateValue !== undefined ? "concrete" : (isState ? "state" : "concrete"),
               name: inputVar.name,
-              value: stateValue !== undefined ? stateValue : (isState ? inputVar.value.slice(1) : inputVar.value),
+              value: directInput ? inputVar.value.slice(1) : stateValue !== undefined ? stateValue : (isState ? inputVar.value.slice(1) : inputVar.value),
             }
           }),
         };
-      });
+      }).filter(item => item !== null);
     };
 
     // Let's run the DD tool
@@ -236,6 +243,7 @@ const PocCanvas: React.FC = () => {
       const newItems: DDToolItem[] = transformItems(items, state);
       console.log("Transformed Item Stack", newItems);
       console.log("STATE IN CANVAS: ", state);
+      console.log("Submitted Tx to dd-tool: ", newItems);
       const g = await runSequence(newItems, RPC_URL, { alwaysFundCaller: true });
       console.log("Result:", g);
       setResult(g);
