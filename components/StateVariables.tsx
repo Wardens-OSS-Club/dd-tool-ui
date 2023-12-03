@@ -1,55 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import { AppInput } from "./AppInput";
+import { AppButtonSuccess } from "./AppButton";
+import { AppP } from "./AppTypography";
 
 interface StateVariablesProps {
   onAddVariable: (name: string, value: string) => void;
   state: { [key: string]: string };
 }
 
-const StateVariables: React.FC<StateVariablesProps> = ({ onAddVariable, state }) => {
-  const [variableName, setVariableName] = useState('');
-  const [variableValue, setVariableValue] = useState('');
+const StateVariables: React.FC<StateVariablesProps> = ({
+  onAddVariable,
+  state,
+}) => {
+  const [variableName, setVariableName] = useState("");
+  const [variableValue, setVariableValue] = useState("");
 
   const handleAddVariable = () => {
     if (variableName && variableValue) {
       onAddVariable("#" + variableName, variableValue);
-      setVariableName('');
-      setVariableValue('');
+      setVariableName("");
+      setVariableValue("");
     }
   };
 
   const renderStateVariables = () => {
     return Object.entries(state).map(([key, value]) => (
-      <div key={key} style={{ padding: '4px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '4px' }}>
+      <div
+        key={key}
+        className="bg-white mb-1 rounded-1 text-black p-2 rounded-[3px]"
+      >
         <strong>{key}:</strong> {value}
       </div>
     ));
   };
 
   return (
-    <div style={{ padding: '8px', backgroundColor: '#E1EBEC', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-        <label style={{ flex: 1, fontSize: '0.9em' }}>Variable Name:</label>
-        <input 
-          type="text"
+    <div className="rounded-[5px] bg-[#E1EBEC] m-[4px] relative shadow-[0 2px 4px rgba(0,0,0,0.2)] relative p-5">
+      <div
+        style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}
+      >
+        <AppInput
+          label="Variable Name:"
+          name=""
           value={variableName}
-          onChange={e => setVariableName(e.target.value)}
-          style={{ flex: 2, padding: '4px', borderRadius: '4px', border: '1px solid #ccc' }}
+          className="bg-white"
+          onChange={(e) => setVariableName(e.target.value)}
         />
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-        <label style={{ flex: 1, fontSize: '0.9em' }}>Variable Value:</label>
-        <input 
-          type="text"
+      <div
+        style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}
+      >
+        <AppInput
+          label="Variable Value:"
+          name=""
           value={variableValue}
-          onChange={e => setVariableValue(e.target.value)}
-          style={{ flex: 2, padding: '4px', borderRadius: '4px', border: '1px solid #ccc' }}
+          className="bg-white"
+          onChange={(e) => setVariableValue(e.target.value)}
         />
       </div>
-      <button onClick={handleAddVariable} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}>
+
+      <AppButtonSuccess onClick={handleAddVariable}>
         Add Variable
-      </button>
-      <div style={{ marginTop: '20px' }}>
-        <h3>State Variables</h3>
+      </AppButtonSuccess>
+
+      <div className="mt-[20px]">
+        <AppP>State Variables</AppP>
         {renderStateVariables()}
       </div>
     </div>

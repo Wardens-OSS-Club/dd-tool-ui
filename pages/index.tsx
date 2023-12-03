@@ -1,10 +1,12 @@
-import Head from 'next/head';
-import styles from '@/styles/Home.module.css';
-import { useEffect } from 'react';
-import PocCanvas from '../components/PocCanvas';
-import { runSequence } from 'dd-tool-package';
-import { MOCK_STEPS } from 'dd-tool-package/mock';
-import Header from '@/components/Header';
+import Head from "next/head";
+import styles from "@/styles/Home.module.css";
+import { useEffect } from "react";
+import PocCanvas from "../components/PocCanvas";
+import { runSequence } from "dd-tool-package";
+import { MOCK_STEPS } from "dd-tool-package/mock";
+import { AppH1 } from "@/components/AppTypography";
+import logo from "./logo.png";
+import Image from "next/image";
 
 // TODO: Setup Ganache HERE and not via the package
 // Run
@@ -14,7 +16,9 @@ export default function Home() {
   async function previewSequence() {
     // We need to run it via context imo
     // TODO: Local Component and grind until done
-    const g = await runSequence(MOCK_STEPS, RPC_URL, { alwaysFundCaller: true });
+    const g = await runSequence(MOCK_STEPS, RPC_URL, {
+      alwaysFundCaller: true,
+    });
     console.log("g", g);
   }
 
@@ -26,40 +30,21 @@ export default function Home() {
     <>
       <Head>
         <title>POC Builder</title>
-        <meta name="description" content="Build your proof of concept easily with drag and drop interface" />
+        <meta
+          name="description"
+          content="Build your proof of concept easily with drag and drop interface"
+        />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className={styles.main}>
-        <div className={styles.heading}>
-          <h1 style={{
-              color: 'linear-gradient(to right, #bdc3c7, #2c3e50)',
-              fontSize: '2.5em',
-              margin: '0',
-              paddingBottom: '50px'
-          }}>Build Your POC</h1>
+      <main className="bg-[#e0f2fe] min-h-screen flex flex-col items-center">
+        <div className="flex gap-2 mt-[50px] mb-[50px] items-center">
+          <AppH1>Build Your POC</AppH1>
+          <Image src={logo} alt="" width={50} height={30} />
         </div>
-
-        <div className={styles.description}>
-          <PocCanvas />
-        </div>
+        <PocCanvas />
       </main>
-
-      <style jsx>{`
-        .${styles.heading} {
-          text-align: center;
-          margin-bottom: 20px;
-        }
-
-        .${styles.gradientText} {
-          background: linear-gradient(to right, #bdc3c7, #2c3e50);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          font-size: 2.5em;
-          margin: 0;
-        }
-      `}</style>
     </>
-  )
+  );
 }
