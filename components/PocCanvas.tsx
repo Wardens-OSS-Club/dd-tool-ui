@@ -192,19 +192,16 @@ const PocCanvas: React.FC = () => {
           },
           outputMappings, // @ts-ignore
           inputMappings: item.inputVariables.map((inputVar) => {
-            console.log("Input Vars: ", inputVar);
             const isState = inputVar.value.startsWith("$");
             const isVar = inputVar.value.startsWith("#");
             const stateValue = isVar ? state[inputVar.value] : undefined;
-            console.log("state value: ", stateValue);
             const directInput = state[inputVar.value] == undefined && !isVar;
-            console.log("Direct input: ", directInput);
 
             return {
               type:
                 stateValue !== undefined
                   ? "concrete"
-                  : isState
+                  : stateValue
                   ? "state"
                   : "concrete",
               name: inputVar.name,
