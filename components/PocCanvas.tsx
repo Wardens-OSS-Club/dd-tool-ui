@@ -100,6 +100,10 @@ const PocCanvas: React.FC = () => {
     console.log("State in canvas: ", state);
   };
 
+  const handleToggleLoading = () => {
+    setLoading(false);
+  }
+
   // These are the VM custom instruction set
   // TODO: either add these to the dd-tool side, or create a file
   const customItems = [
@@ -383,6 +387,13 @@ const PocCanvas: React.FC = () => {
             <span> Execute Sequence</span>
 
             {loading && <AppSpinner />}
+          </AppDefaultButton>
+          <AppDefaultButton
+            onClick={handleToggleLoading}
+            disabled={!loading}
+            className="gap-2"
+          >
+            <span>Abort</span>
           </AppDefaultButton>
         </div>
 
