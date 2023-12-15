@@ -173,7 +173,7 @@ const PocCanvas: React.FC = () => {
           outputMappings = outputs[1]
             .split(",")
             .map(
-              (_: string, index: number) => `${item.content}-var${index + 1}`
+              (_: string, index: number) => `${item.address.slice(0,6)}-${item.content}-var${index + 1}`
             );
         }
 
