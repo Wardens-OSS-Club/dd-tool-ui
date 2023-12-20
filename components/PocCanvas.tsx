@@ -14,6 +14,7 @@ import DraggableAction from "./DraggableAction";
 import ResultDisplay from "./ResultDisplay";
 import { default as VariableInput } from "./StateVariables";
 import { AppSpinner } from "./AppSpinner";
+import CopyToClipboardButton from "./CopyToClipboard";
 
 const RPC_URL = "https://mainnet.infura.io/v3/5b6375646612417cb32cc467e0ef8724";
 
@@ -369,6 +370,19 @@ const PocCanvas: React.FC = () => {
     return Array.from(allOutputMappings);
   }
 
+  const stringified = JSON.stringify(
+    items.map(
+      ({ functionString, address, inputs, inputVariables }) => ({
+        functionString,
+        address,
+        inputs,
+        inputVariables,
+      })
+    ),
+    null,
+    2
+  )
+
   return (
     <>
       <div>
@@ -457,19 +471,9 @@ const PocCanvas: React.FC = () => {
 
           <AppCode
             language="json"
-            code={JSON.stringify(
-              items.map(
-                ({ functionString, address, inputs, inputVariables }) => ({
-                  functionString,
-                  address,
-                  inputs,
-                  inputVariables,
-                })
-              ),
-              null,
-              2
-            )}
+            code={stringified}
           />
+          <CopyToClipboardButton text={stringified} />
 
           {Object.keys(result).length > 0 && (
             <div
