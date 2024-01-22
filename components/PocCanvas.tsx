@@ -1,4 +1,5 @@
 import { useBooleanState } from "@/hooks/useBooleanState";
+import { usePersistWithLocalStorage } from "@/hooks/usePersistWithLocalStorage";
 import { runSequence } from "dd-tool-package";
 import { ethers } from "ethers";
 import React, { useEffect, useState } from "react";
@@ -9,11 +10,11 @@ import { ABIDrawer } from "./ABIDrawer";
 import AbiModal from "./AbiModal";
 import { AppDefaultButton } from "./AppButton";
 import { AppCode } from "./AppCode";
-import { AppH2, AppH4 } from "./AppTypography";
+import { AppSpinner } from "./AppSpinner";
+import { AppH2 } from "./AppTypography";
 import DraggableAction from "./DraggableAction";
 import ResultDisplay from "./ResultDisplay";
 import { default as VariableInput } from "./StateVariables";
-import { AppSpinner } from "./AppSpinner";
 
 const RPC_URL = "https://mainnet.infura.io/v3/5b6375646612417cb32cc467e0ef8724";
 
@@ -69,7 +70,7 @@ const PocCanvas: React.FC = () => {
   // We start with this one function as an example
   // Note: `items` is the array of instructions being constructed
   // TO DO: Replace with safe default
-  const [items, setItems] = useState<Item[]>([
+  const [items, setItems] = usePersistWithLocalStorage<Item[]>("instructions", [
     {
       id: "0",
       content: "getPricePerFullShare()",
@@ -102,7 +103,7 @@ const PocCanvas: React.FC = () => {
 
   const handleToggleLoading = () => {
     setLoading(false);
-  }
+  };
 
   // These are the VM custom instruction set
   // TODO: either add these to the dd-tool side, or create a file
@@ -177,7 +178,10 @@ const PocCanvas: React.FC = () => {
           outputMappings = outputs[1]
             .split(",")
             .map(
-              (_: string, index: number) => `${item.id}-${item.address.slice(0,6)}-${item.content}-var${index + 1}`
+              (_: string, index: number) =>
+                `${item.id}-${item.address.slice(0, 6)}-${item.content}-var${
+                  index + 1
+                }`
             );
         }
 

@@ -1,11 +1,10 @@
-import React from "react";
 import { ethers } from "ethers";
 
 interface ResultDisplayProps {
   result: { [key: string]: any };
 }
 
-const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
+const ResultDisplay = ({ result }: ResultDisplayProps) => {
   const renderValue = (value: any, parentKey = "") => {
     if (Array.isArray(value)) {
       return (
