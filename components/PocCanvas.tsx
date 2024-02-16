@@ -161,6 +161,7 @@ const PocCanvas: React.FC = () => {
     state: { [key: string]: any }
   ): DDToolItem[] => {
     let prankCaller: string = "0xBE0eB53F46cd790Cd13851d5EFf43D12404d33E8";
+    // @ts-ignore // NOTE: Null is filtered right below
     return items
       .map((item) => {
         // Handle the prank
