@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { AppInput } from "./AppInput";
+import { useState } from "react";
 import { AppButtonSuccess } from "./AppButton";
+import { AppInput } from "./AppInput";
 import { AppP } from "./AppTypography";
 
 interface StateVariablesProps {
@@ -8,10 +8,7 @@ interface StateVariablesProps {
   state: { [key: string]: string };
 }
 
-const StateVariables: React.FC<StateVariablesProps> = ({
-  onAddVariable,
-  state,
-}) => {
+const StateVariables = ({ onAddVariable, state }: StateVariablesProps) => {
   const [variableName, setVariableName] = useState("");
   const [variableValue, setVariableValue] = useState("");
 
